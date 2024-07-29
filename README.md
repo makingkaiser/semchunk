@@ -1,7 +1,3 @@
-Here's the text formatted in Markdown for a README file, with added elements and proper formatting:
-
----
-
 # Semantic Chunking Implementation
 
 ## Overview
