@@ -1,0 +1,5 @@
+# Ignore .chroma directory
+.chroma/
+
+# Ignore virtual environment directory
+venv/
