@@ -10,8 +10,6 @@ Currently, the common methods for splitting documents involve using simple n-siz
 
 This research paper proposes a method called **semantic chunking**, which aims to split documents into groups of sentences that are most topically similar to each other.
 
-![Example of Semantic Chunking](split.png)
-
 ## Main Methodology
 
 - **Sentence Embeddings Generation**
@@ -36,6 +34,8 @@ This research paper proposes a method called **semantic chunking**, which aims t
 ## Visualization
 
 I've added a function to visualize the splits of documents, inspired by Greg Kamradt's notebook: [5 Levels of Text Splitting](https://github.com/FullStackRetrieval-com/RetrievalTutorials/blob/main/tutorials/LevelsOfTextSplitting/5_Levels_Of_Text_Splitting.ipynb).
+
+![Example of Semantic Chunking](split.png)
 
 ## Disclaimer
 

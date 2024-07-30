@@ -1,0 +1,8 @@
+ibm_watsonx_ai==1.1.2
+langchain_ibm==0.1.11
+langdetect==1.0.9
+matplotlib==3.9.1
+nltk==3.8.1
+numpy==2.0.1
+scikit_learn==1.5.1
+sentence_transformers==3.0.1

@@ -8,6 +8,7 @@ import nltk
 from nltk.tokenize import sent_tokenize
 from concurrent.futures import ProcessPoolExecutor
 import langdetect
+from typing import Callable, List, Tuple
 
 # Download necessary NLTK data
 nltk.download('punkt', quiet=True)
@@ -27,22 +28,16 @@ def detect_language(text: str) -> str:
     except:
         return 'en'  # Default to English if detection fails
 
-def embed_sentences(sentences: List[str], language: str) -> np.ndarray:
+def embed_sentences(sentences: List[str]) -> np.ndarray:
     """
     Generate embeddings for a list of sentences using Sentence-BERT.
 
     Args:
         sentences (List[str]): List of sentences to embed.
-        language (str): Language code for the input text.
-
     Returns:
         np.ndarray: Array of sentence embeddings.
     """
-    # Select appropriate model based on language
-    if language.startswith('zh'):
-        model_name = 'distiluse-base-multilingual-cased-v2'  # Better for chinese
-    else:
-        model_name = 'all-MiniLM-L6-v2' 
+    model_name = 'all-MiniLM-L6-v2' 
     model = SentenceTransformer(model_name)
     return model.encode(sentences, show_progress_bar=False)
 
@@ -162,7 +157,7 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> L
     sentences = sent_tokenize(document)
     
     # Generate embeddings
-    embeddings = embed_sentences(sentences, language='en')
+    embeddings = embed_sentences(sentences)
     
     # Compute gap scores
     gap_scores = compute_gap_scores(embeddings, n)
@@ -183,7 +178,7 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> L
     
     # Cluster segments
     n_clusters = min(len(chunks), 5)  # Adjust the number of clusters as needed
-    chunk_embeddings = embed_sentences(chunks, language='en')
+    chunk_embeddings = embed_sentences(chunks)
     cluster_labels = cluster_segments(chunks, chunk_embeddings, n_clusters)
     
     return list(zip(chunks, cluster_labels)), smoothed_scores, boundaries
@@ -191,16 +186,14 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> L
 def process_chunk(args):
     """Helper function for parallel processing."""
     chunk, language = args
-    return embed_sentences([chunk], language)[0]
+    return embed_sentences([chunk])[0]
 
-def parallel_embed_sentences(sentences: List[str], language: str) -> np.ndarray:
+def parallel_embed_sentences(sentences: List[str]) -> np.ndarray:
     """
     Generate embeddings for a list of sentences using parallel processing.
 
     Args:
         sentences (List[str]): List of sentences to embed.
-        language (str): Language code for the input text.
-
     Returns:
         np.ndarray: Array of sentence embeddings.
     """
@@ -275,7 +268,7 @@ def visualize_segmentation_bars(smoothed_scores: List[float], boundaries: List[i
     plt.show()
 
 # Modify the segment_document function to return smoothed_scores and boundaries
-def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> Tuple[List[str], List[float], List[int]]:
+def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0, embedding_function: Callable[[List[str]], np.ndarray] = embed_sentences) -> Tuple[List[str], List[float], List[int]]:
     """
     Segment a document into coherent chunks using the described method.
 
@@ -284,9 +277,10 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> T
         n (int): Number of sentences to consider in each sequence for gap score computation.
         k (int): Window size for smoothing.
         c (float): Threshold parameter for boundary detection.
+        embedding_function (Callable[[List[str]], np.ndarray]): Function to generate embeddings. Defaults to embed_sentences.
 
     Returns:
-        List[Tuple[str, int]]: List of segmented chunks from the document and their cluster labels.
+        Tuple[List[str], List[float], List[int]]: List of segmented chunks from the document, smoothed scores, and boundaries.
     """
     # Detect language
     # language = detect_language(document)
@@ -296,8 +290,8 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> T
     sentences = sent_tokenize(document)
     
     # Generate embeddings
-    embeddings = embed_sentences(sentences, language='en')
-    
+    embeddings = embedding_function(sentences)
+    print(embeddings.shape)
     # Compute gap scores
     gap_scores = compute_gap_scores(embeddings, n)
     
@@ -321,7 +315,7 @@ def segment_document(document: str, n: int = 2, k: int = 5, c: float = 1.0) -> T
 
     
 if __name__ == "__main__":
-    with open('essays.txt', 'r') as file:
+    with open('essays.txt', 'r') as file: #we use 3 generated essays to test our function
         document = file.read()
     chunks, smoothed_scores, boundaries = segment_document(document, n=1, k=1, c=1.0)
     
